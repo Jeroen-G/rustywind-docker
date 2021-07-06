@@ -1,0 +1,22 @@
+name: Release CI
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    name: Create release
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build the Docker image for the tagged release
+      run: docker build . --tag jeroeng/rustywind:${{ steps.get_version.outputs.VERSION }}
+    - name: Build the Docker image for the latest tag
+      run: docker build . --tag jeroeng/rustywind:latest
+    - name: Push to Docker Hub
+      if: github.event_name != 'pull_request'
+      run: docker login -u="jeroeng" -p="${{ secrets.DOCKERHUB_TOKEN }}" && docker push jeroeng/rustywind:latest && docker push jeroeng/rustywind:${{ steps.get_version.outputs.VERSION }}
